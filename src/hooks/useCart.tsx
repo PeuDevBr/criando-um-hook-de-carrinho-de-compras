@@ -42,7 +42,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       // procura dentro do carinho se existe um produco com id igual ao id fornecido na chamada da função
 
       const stock = await api.get(`/stock/${productId}`)
-      // pega na api e pega os dados do stock referente ao id fornecido
+      // acessa a api e pega os dados do stock referente ao id fornecido
 
       const stockAmount = stock.data.amount
       // armazena a quantidado do item no estoque
@@ -81,7 +81,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       }
 
       setCart(updateCart) // atualiza os dados do carrinho
-
       localStorage.setItem('@RocketShoes:cart', JSON.stringify(updateCart))
       // transforma os dados em String e salva no localStorage
 
@@ -92,9 +91,26 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   const removeProduct = (productId: number) => {
     try {
-      // TODO
+      const updateCart = [...cart] 
+      // recebe uma cópia dos dados do array cart
+
+      const productIndex = updateCart.findIndex(product => product.id === productId)
+      // procura dentro do carinho se existe um produco com id igual ao id        fornecido na chamada da função e retorna o index ou retorna -1 se não encontrar
+
+      if (productIndex >= 0) {
+        // se encontrar o item o valor do index será maior que -1
+
+        updateCart.splice(productIndex, 1)
+        // remove do array updateCart 1 item apartir do index fornecido
+        setCart(updateCart) // atualiza os dados do carrinho
+        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updateCart))
+        // transforma os dados em String e salva no localStorage
+      } else { // caso não encontre
+        throw Error();
+        // força a dá erro e mostrar a mensagem do catch
+      }
     } catch {
-      // TODO
+      toast.error('Erro na remoção do produto');
     }
   };
 
@@ -103,9 +119,42 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      // TODO
+      if (amount <= 0) {
+        return;
+        // se a quantidade desejada do produto for menor ou igual a 0, sai da função sem alterar nada
+      }
+
+      const stock = await api.get(`/stock/${productId}`)
+      // acessa a api e pega os dados do stock referente ao id fornecido
+
+      const stockAmount = stock.data.amount
+      // armazena a quantidado do item no estoque
+
+      if (amount > stockAmount){
+        // se a quantidade desejada for maior que a quantidade no estoque
+        toast.error('Quantidade solicitada fora de estoque');
+
+        return; //cancela a execução da função
+      } 
+
+      const updateCart = [...cart] 
+      // recebe uma cópia dos dados do array cart
+
+      const productExists = updateCart.find(product => product.id === productId)
+      // procura dentro do carinho se existe um produco com id igual ao id fornecido na chamada da função
+
+      if (productExists) { // se o produto existe
+        productExists.amount = amount 
+        // passa a quantidade recebida para o produto existente
+        setCart(updateCart) // atualiza os dados do carrinho
+        localStorage.setItem('@RocketShoes:cart', JSON.stringify(updateCart))
+        // transforma os dados em String e salva no localStorage
+      } else {
+        throw Error();
+        // força a dá erro e mostrar a mensagem do catch
+      }
     } catch {
-      // TODO
+      toast.error('Erro na alteração de quantidade do produto');
     }
   };
 
